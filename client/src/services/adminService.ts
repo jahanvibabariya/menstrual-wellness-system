@@ -3,60 +3,72 @@ import type { User, AdminAnalytics as AdminAnalyticsType, Content } from '@/type
 
 interface UsersResponse {
   success: boolean;
-  data: User[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
+  data: {
+    users: User[];
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
   };
 }
 
 interface AnalyticsResponse {
   success: boolean;
-  data: AdminAnalyticsType;
+  data: {
+    analytics: AdminAnalyticsType;
+  };
 }
 
 interface ContentListResponse {
   success: boolean;
-  data: Content[];
+  data: {
+    content: Content[];
+  };
 }
 
 interface ContentResponse {
   success: boolean;
-  data: Content;
+  data: {
+    content: Content;
+  };
 }
 
 export const adminService = {
-  async getUsers(params?: Record<string, string | number>): Promise<UsersResponse> {
+  async getUsers(params?: Record<string, string | number>): Promise<{ success: boolean; data: User[]; pagination?: any }> {
     const { data } = await api.get<UsersResponse>('/admin/users', { params });
-    return data;
+    return {
+      success: data.success,
+      data: data.data?.users || [],
+      pagination: data.data?.pagination,
+    };
   },
 
   async toggleUserStatus(id: string): Promise<User> {
-    const { data } = await api.patch<{ success: boolean; data: User }>(`/admin/users/${id}/toggle-status`);
-    return data.data;
+    const { data } = await api.put<{ success: boolean; data: { user: User } }>(`/admin/users/${id}/toggle`);
+    return data.data.user;
   },
 
   async getAnalytics(): Promise<AdminAnalyticsType> {
     const { data } = await api.get<AnalyticsResponse>('/admin/analytics');
-    return data.data;
+    return data.data.analytics;
   },
 
   async getContent(category?: string): Promise<Content[]> {
     const params = category ? { category } : {};
     const { data } = await api.get<ContentListResponse>('/admin/content', { params });
-    return data.data;
+    return data.data?.content || [];
   },
 
   async createContent(contentData: Partial<Content>): Promise<Content> {
     const { data } = await api.post<ContentResponse>('/admin/content', contentData);
-    return data.data;
+    return data.data.content;
   },
 
   async updateContent(id: string, contentData: Partial<Content>): Promise<Content> {
     const { data } = await api.put<ContentResponse>(`/admin/content/${id}`, contentData);
-    return data.data;
+    return data.data.content;
   },
 
   async deleteContent(id: string): Promise<void> {
@@ -68,3 +80,4 @@ export const adminService = {
     return data;
   },
 };
+export default adminService;
