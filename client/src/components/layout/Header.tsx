@@ -13,6 +13,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -61,12 +62,20 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
         {/* Right: Search + Notifications + Avatar */}
         <div className="flex items-center gap-3">
-          {/* Search (decorative) */}
+          {/* Search (functional) */}
           <div className="hidden md:flex items-center bg-white/50 backdrop-blur rounded-xl px-3 py-2 border border-white/30 gap-2">
             <Search className="w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search wellness tips..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  const dest = user?.role === 'admin' ? '/admin/content' : '/dashboard/relaxation';
+                  navigate(`${dest}?search=${encodeURIComponent(searchQuery.trim())}`);
+                }
+              }}
               className="bg-transparent text-sm text-gray-600 placeholder-gray-400 outline-none w-40"
             />
           </div>

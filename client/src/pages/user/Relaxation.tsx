@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Sparkles, Play, Square, Heart, Wind, Moon, HelpCircle } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -10,6 +11,8 @@ type BreathPhase = 'idle' | 'inhale' | 'hold' | 'exhale';
 export const Relaxation: React.FC = () => {
   const [tips, setTips] = useState<Content[]>([]);
   const [loadingTips, setLoadingTips] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
 
   // Breathing exercise states
   const [breathPhase, setBreathPhase] = useState<BreathPhase>('idle');
@@ -100,8 +103,22 @@ export const Relaxation: React.FC = () => {
     }
   ];
 
-  const displayedTips = tips.length > 0 ? tips.filter(t => t.category === 'wellness_tip') : fallbackTips;
-  const educationalContent = tips.length > 0 ? tips.filter(t => t.category === 'education') : [];
+  const displayedTips = (tips.length > 0 ? tips.filter(t => t.category === 'wellness_tip') : fallbackTips)
+    .filter(t =>
+      !searchQuery ||
+      t.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  const educationalContent = tips.length > 0
+    ? tips.filter(t => t.category === 'education')
+        .filter(t =>
+          !searchQuery ||
+          t.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          t.content?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+    : [];
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -115,6 +132,23 @@ export const Relaxation: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {searchQuery && (
+        <div className="bg-rose-50/70 border border-rose-100/60 rounded-2xl px-5 py-4 flex items-center justify-between shadow-sm">
+          <span className="text-sm text-rose-700 font-semibold">
+            Showing search results for "<span className="italic">{searchQuery}</span>"
+          </span>
+          <button
+            onClick={() => {
+              searchParams.delete('search');
+              setSearchParams(searchParams);
+            }}
+            className="text-xs bg-rose-500 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-rose-600 transition-colors"
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Breathing Exercise Card */}

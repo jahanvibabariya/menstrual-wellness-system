@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Edit2, Trash2, FileText, X, Check } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -13,6 +14,8 @@ export const ContentManagement: React.FC = () => {
   const [content, setContent] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<'all' | 'wellness_tip' | 'relaxation' | 'education'>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
 
   // Modal / Form state
   const [modalOpen, setModalOpen] = useState(false);
@@ -98,9 +101,13 @@ export const ContentManagement: React.FC = () => {
     }
   };
 
-  const filteredContent = activeCategory === 'all'
-    ? content
-    : content.filter(c => c.category === activeCategory);
+  const filteredContent = (activeCategory === 'all' ? content : content.filter(c => c.category === activeCategory))
+    .filter(c =>
+      !searchQuery ||
+      c.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.content?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   const categories = [
     { id: 'all', label: 'All Articles' },
@@ -141,6 +148,23 @@ export const ContentManagement: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {searchQuery && (
+        <div className="bg-rose-50/70 border border-rose-100/60 rounded-2xl px-5 py-4 flex items-center justify-between shadow-sm">
+          <span className="text-sm text-rose-700 font-semibold">
+            Showing search results for "<span className="italic">{searchQuery}</span>"
+          </span>
+          <button
+            onClick={() => {
+              searchParams.delete('search');
+              setSearchParams(searchParams);
+            }}
+            className="text-xs bg-rose-500 text-white font-bold px-3 py-1.5 rounded-lg hover:bg-rose-600 transition-colors"
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <Loader />
